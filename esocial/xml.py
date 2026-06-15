@@ -29,8 +29,8 @@ from signxml import XMLSigner
 
 from dotmap import DotMap
 
+import esocial
 from esocial import utils
-from esocial import __esocial_version__
 
 
 class XMLValidateError(Exception):
@@ -62,7 +62,9 @@ class XMLValidate(object):
         .
     XSD file: evtMonit.xsd
     """
-    def __init__(self, xml, xsd=None, esocial_version=__esocial_version__):
+    def __init__(self, xml, xsd=None, esocial_version=None):
+        if esocial_version is None:
+            esocial_version = esocial.__esocial_version__
         self.xml_doc = None
         self.last_errors = None
         if isinstance(xml, etree._ElementTree):
@@ -114,7 +116,9 @@ def xsd_fromfile(f):
     return etree.XMLSchema(xmlschema)
 
 
-def xsd_fromdoc(xml_doc, esocial_version=__esocial_version__):
+def xsd_fromdoc(xml_doc, esocial_version=None):
+    if esocial_version is None:
+        esocial_version = esocial.__esocial_version__
     xsd = None
     xsd_path = os.path.dirname(os.path.abspath(__file__))
     if len(xml_doc.getroot().getchildren()) > 0:

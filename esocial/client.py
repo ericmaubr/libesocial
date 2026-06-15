@@ -66,9 +66,11 @@ class CustomHTTPSAdapter(HTTPAdapter):
 class WSClient(object):
 
     def __init__(self, pfx_file=None, pfx_passw=None, employer_id=None, sender_id=None,
-                 ca_file=serpro_ca_bundle, target=esocial._TARGET, esocial_version=esocial.__esocial_version__):
+                 ca_file=serpro_ca_bundle, target=esocial._TARGET, esocial_version=None):
         self.ca_file = ca_file
         self.pfx_passw = pfx_passw
+        if esocial_version is None:
+            esocial_version = esocial.__esocial_version__
         if pfx_file is not None:
             self.cert_data = pkcs12_data(pfx_file, pfx_passw)
         else:
@@ -144,7 +146,7 @@ class WSClient(object):
             # Signing...
             event_signed = xml.sign(event, self.cert_data)
             # Validating
-            xml.XMLValidate(event_signed).validate()
+            xml.XMLValidate(event_signed, esocial_version=self.esocial_version).validate()
             # Adding the event to batch
             self.batch.append(event_signed)
             return (event_id, event_signed)
