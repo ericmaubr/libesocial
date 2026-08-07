@@ -20,6 +20,8 @@ access eSocial government webservices to send and retrieve events batchs.
 __version__ = '0.1.0'
 
 # __esocial_version__ = '2.5.00'
+# __esocial_version__ = 'S-1.1'
+# __esocial_version__ = 'S-1.3'  # leiaute vigente em producao; selecione via esocial_version
 __esocial_version__ = 'S-1.0'
 
 __xsd_versions__ = {

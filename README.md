@@ -20,12 +20,12 @@ pip install libesocial
 A versão mais recente diretamente do repositório:
 
 ```
-pip install https://github.com/qualitaocupacional/libesocial/archive/main.zip
+pip install https://github.com/ericmaubr/libesocial/archive/main.zip
 ```
 
 Ou você pode clonar este repositório:
 ```
-git clone https://github.com/qualitaocupacional/libesocial
+git clone https://github.com/ericmaubr/libesocial
 ```
 
 Entrar na pasta do repositório recém clonado:
