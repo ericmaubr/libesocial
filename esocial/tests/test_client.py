@@ -41,3 +41,28 @@ def test_client_connect():
         wsdl_client = ws.connect(ws.esocial_send_url())
     assert '403 Client Error: Forbidden for url' in str(exception_info)
     # wsdl_client.wsdl.dump()
+
+
+def test_client_connect_exposes_last_soap_response_when_history_is_enabled(monkeypatch):
+    class FakeHistoryPlugin:
+        def __init__(self, maxlen):
+            assert maxlen == 1
+            self.last_received = {'envelope': 'soap-response'}
+
+    captured = {}
+
+    def fake_zeep_client(url, transport, plugins):
+        captured['url'] = url
+        captured['transport'] = transport
+        captured['plugins'] = plugins
+        return object()
+
+    monkeypatch.setattr(client, 'HistoryPlugin', FakeHistoryPlugin)
+    monkeypatch.setattr(client.zeep, 'Client', fake_zeep_client)
+
+    ws = ws_factory()
+    ws.capture_history = True
+    ws.connect('https://example.test/service?wsdl')
+
+    assert len(captured['plugins']) == 1
+    assert ws.last_received == {'envelope': 'soap-response'}

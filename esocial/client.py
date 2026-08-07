@@ -31,6 +31,7 @@ from esocial.utils import (
 
 import zeep
 from zeep import xsd
+from zeep.plugins import HistoryPlugin
 from zeep.transports import Transport
 
 from lxml import etree
@@ -66,7 +67,8 @@ class CustomHTTPSAdapter(HTTPAdapter):
 class WSClient(object):
 
     def __init__(self, pfx_file=None, pfx_passw=None, employer_id=None, sender_id=None,
-                 ca_file=serpro_ca_bundle, target=esocial._TARGET, esocial_version=None):
+                 ca_file=serpro_ca_bundle, target=esocial._TARGET, esocial_version=None,
+                 capture_history=False):
         self.ca_file = ca_file
         self.pfx_passw = pfx_passw
         if esocial_version is None:
@@ -80,6 +82,8 @@ class WSClient(object):
         self.max_batch_size = 50
         self.employer_id = employer_id
         self.sender_id = sender_id or employer_id
+        self.capture_history = capture_history
+        self._history = None
         # self.target = target
         self.esocial_version = esocial_version
         self._set_target(target)
@@ -97,10 +101,26 @@ class WSClient(object):
             )
         )
         ws_transport = Transport(session=transport_session)
+        plugins = []
+        if self.capture_history:
+            self._history = HistoryPlugin(maxlen=1)
+            plugins.append(self._history)
         return zeep.Client(
             url,
-            transport=ws_transport
+            transport=ws_transport,
+            plugins=plugins,
         )
+
+    @property
+    def last_received(self):
+        """Return the most recent SOAP response captured for diagnostic use.
+
+        The response includes SOAP Fault envelopes and is only recorded when
+        ``capture_history=True`` was passed to the constructor.
+        """
+        if self._history is None:
+            return None
+        return self._history.last_received
 
     def esocial_send_url(self):
         return esocial._WS_URL[self.target]['send']
