@@ -66,3 +66,42 @@ def test_client_connect_exposes_last_soap_response_when_history_is_enabled(monke
 
     assert len(captured['plugins']) == 1
     assert ws.last_received == {'envelope': 'soap-response'}
+
+
+def test_client_connect_requests_wsdl_only_once(monkeypatch):
+    wsdl = (
+        b'<?xml version="1.0"?>'
+        b'<definitions xmlns="http://schemas.xmlsoap.org/wsdl/" '
+        b'targetNamespace="http://test.example/"></definitions>'
+    )
+    calls = []
+
+    class FakeResponse:
+        content = wsdl
+
+        def raise_for_status(self):
+            pass
+
+        def close(self):
+            pass
+
+    class FakeSession:
+        def __init__(self):
+            self.headers = {}
+
+        def mount(self, prefix, adapter):
+            pass
+
+        def get(self, url, **kwargs):
+            calls.append(url)
+            return FakeResponse()
+
+    monkeypatch.setattr(client.requests, 'Session', FakeSession)
+    monkeypatch.setattr(client, '_wsdl_cache', client.InMemoryCache())
+
+    ws = ws_factory()
+    url = 'https://example.test/service?wsdl'
+    ws.connect(url)
+    ws.connect(url)
+
+    assert calls == [url]

@@ -31,6 +31,7 @@ from esocial.utils import (
 
 import zeep
 from zeep import xsd
+from zeep.cache import InMemoryCache
 from zeep.plugins import HistoryPlugin
 from zeep.transports import Transport
 
@@ -39,6 +40,10 @@ from lxml import etree
 
 here = os.path.abspath(os.path.dirname(__file__))
 serpro_ca_bundle = os.path.join(here, 'certs', 'serpro_full_chain.pem')
+
+# WSDL/XSD do eSocial em memoria (timeout padrao do zeep: 1h), evita baixar a cada connect().
+# ponytail: sem disco (SqliteCache) de proposito; se o eSocial mudar o WSDL, vale ate 1h ou reinicio.
+_wsdl_cache = InMemoryCache()
 
 
 class CustomHTTPSAdapter(HTTPAdapter):
@@ -100,7 +105,7 @@ class WSClient(object):
                 }
             )
         )
-        ws_transport = Transport(session=transport_session)
+        ws_transport = Transport(session=transport_session, cache=_wsdl_cache)
         plugins = []
         if self.capture_history:
             self._history = HistoryPlugin(maxlen=1)
