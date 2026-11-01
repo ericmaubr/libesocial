@@ -15,6 +15,7 @@
 import six
 import os
 import tempfile
+import warnings
 import contextlib
 
 # from OpenSSL import crypto
@@ -46,7 +47,12 @@ def normalize_text(text):
 def pkcs12_data(cert_file, password):
     password = password.encode('utf-8')
     with open(cert_file, 'rb') as fp:
-        content_pkcs12 = pkcs12.load_pkcs12(fp.read(), password)
+        # .pfx de certificadora costuma vir em BER; a cryptography abre e emite UserWarning (decisao do
+        # Eric, 2026-10-31: BER e o padrao de quem fornece o certificado, o log fica limpo). Se ela
+        # passar a recusar, esocial/tests/test_pkcs12_ber.py acusa.
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', message='.*falling back to parsing as BER.*', category=UserWarning)
+            content_pkcs12 = pkcs12.load_pkcs12(fp.read(), password)  # shared-ok: libesocial nao importa o shared
     pkey = content_pkcs12.key
     cert_X509 = content_pkcs12.cert.certificate
     key_str = pkey.private_bytes(
